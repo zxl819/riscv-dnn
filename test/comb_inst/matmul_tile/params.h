@@ -2,17 +2,21 @@
 #define __PARAMS_H__
 
 #ifndef M
-#define M 64
+#define M 100
 #endif
 
 #ifndef K
-#define K 64
+#define K 100
 #endif
 
 #ifndef N
-#define N 64
+#define N 100
 #endif
 
 #define OUT_SIZE  (M * N)
+
+#ifndef NLOOPS
+#define NLOOPS 1
+#endif
 
 #endif

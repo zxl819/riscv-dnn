@@ -5,7 +5,8 @@
 #include "resnet.h"
 
 int main() {
-  printf("begin %d\n", N);
+  printf("begin\n");
+  int N=1;
   const int num_pictures = N;
   const int picture_size = 224 * 224 * 3 * sizeof(float16_t);
   uint64_t cycles = 0;

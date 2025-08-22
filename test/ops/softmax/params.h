@@ -2,11 +2,11 @@
 #define __PARAMS_H__
 
 #ifndef H
-#define H 1
+#define H 300
 #endif
 
 #ifndef W
-#define W 1001
+#define W 300
 #endif
 
 #define SIZE  (H * W)

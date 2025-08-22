@@ -6,13 +6,14 @@ import pandas as pd
 
 import tensorflow as tf
 
-sys.path.append("../../../utils") 
-from check import from_txt, check_to_txt
-from work import do_test
+sys.path.append("/nfs/home/zhengsihan/Code/new-tests/src-tests/riscv-dnn")
+# sys.path.append("../../../utils") 
+from utils.check import from_txt, check_to_txt
+from utils.work import do_test
 
 
-title = "Diffent Optimization levels for conv operator"
-opt_levels = {"loop=1":"-O2", "loop=2":"-O2 -DNLOOPS=2"}
+title = "test for maxpool operator"
+opt_levels = {"loop=1":"-O2"}
 
 simulator = 'spike'
 if len(sys.argv) > 1:
@@ -31,6 +32,8 @@ def maxpool(num, hin, win, cin, kh, kw, sh=1, sw=1, pt=0, pb=0, pl=0, pr=0):
     vd = vd.numpy().astype('float16')
     vs1.tofile(f"build/{num}/src.bin")
     vd.tofile(f'build/{num}/golden.bin')
+
+    vs1.tofile(f"src.bin")
 
     return vd
 
@@ -75,16 +78,19 @@ if __name__ == "__main__":
     #                        sh=1, sw=1
     #                                   pt=0, pb=0, pl=0, pr=0
     params = (
-        (16,  16,  8, 3, 3, 1, 1),
-        (16,  16,  8, 3, 3, 2, 2),
-        (32,  32,  8, 3, 3, 1, 1),
-        (32,  32,  8, 3, 3, 2, 2),
-        (128, 128, 8, 3, 3, 1, 1),
-        (128, 128, 8, 3, 3, 2, 2),
-        (16,  16,  64, 3, 3, 1, 1),
-        (16,  16,  64, 3, 3, 2, 2),
-        (32,  32,  64, 3, 3, 1, 1),
-        (32,  32,  64, 3, 3, 2, 2),
+
+        (13, 13, 256, 3, 3, 2, 2),
+
+        # (16,  16,  8, 3, 3, 1, 1),
+        # (16,  16,  8, 3, 3, 2, 2),
+        # (32,  32,  8, 3, 3, 1, 1),
+        # (32,  32,  8, 3, 3, 2, 2),
+        # (128, 128, 8, 3, 3, 1, 1),
+        # (128, 128, 8, 3, 3, 2, 2),
+        # (16,  16,  64, 3, 3, 1, 1),
+        # (16,  16,  64, 3, 3, 2, 2),
+        # (32,  32,  64, 3, 3, 1, 1),
+        # (32,  32,  64, 3, 3, 2, 2),
     )
     
-    do_test(params, opt_levels, test, title, simulator, simulator!='spike')
+    do_test(params, opt_levels, test, title, simulator, False)

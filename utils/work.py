@@ -4,9 +4,9 @@ import pandas as pd
 
 import multiprocessing as mp
 
-from check import from_txt, get_sig_addr
-from perf import get_perf_data, generate_perf_report
-from tma import PlotMetrics
+from utils.check import from_txt, get_sig_addr
+from utils.perf import get_perf_data, generate_perf_report
+from utils.tma import PlotMetrics
 
 cols = ['Workload', 'Cycles', 'IPC', 'Front', 'BS', 'MEM', 'CORE', 'Retire']
 

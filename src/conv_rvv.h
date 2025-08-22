@@ -78,17 +78,17 @@ static inline int conv(Tensor *dst, Tensor *src, Tensor *weight, Tensor *srcPad,
                 vfloat16m4_t _weight = vle16_v_f16m4(_psrc_weight, vl_out);
                 _psrc_weight += cout;
                 _sum = vfwmacc_vf_f32m8(_sum, _src, _weight, vl_out);
-              } // l
+              } // l   cin
             offset_src += dilation_w * cin;
-            } // n
+            } // n   kw
           offset_src1 += dilation_h * win * cin;
-          } // m
+          } // m     kh
 
           vse16_v_f16m4(pdst+offset_dst, vfncvt_f_f_w_f16m4(_sum, vl_out), vl_out);
  
-        } // k
-      } // j
-    } // i
+        } // k  cout
+      } // j    wout
+    } // i    hout
 
     return 0;
 }

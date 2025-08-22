@@ -4,9 +4,10 @@ import sys
 import numpy as np
 import pandas as pd
 
-sys.path.append("../../../utils") 
-from check import from_txt, check_to_txt
-from work import do_test
+# sys.path.append("../../../utils") 
+sys.path.append("/nfs/home/zhengsihan/Code/new-tests/src-tests/riscv-dnn")
+from utils.check import from_txt, check_to_txt
+from utils.work import do_test
 
 
 title = "Diffent Optimization levels for conv operator"
@@ -25,6 +26,7 @@ def padding(num, hin, win, cin, pt=0, pb=0, pl=0, pr=0):
 
     vs1.tofile(f"build/{num}/src.bin")
     vd.tofile(f'build/{num}/golden.bin')
+    vs1.tofile(f"src.bin")
 
     return vd
 

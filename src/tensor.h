@@ -8,7 +8,7 @@
 #define DEBUG_PRINT 1
 #define CACHELINE 0
 #else
-#define DEBUG_PRINT 0
+#define DEBUG_PRINT 1
 #define CACHELINE 128
 #endif
 

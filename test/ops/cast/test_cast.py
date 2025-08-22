@@ -66,7 +66,7 @@ if __name__ == "__main__":
         chara_start = 1
         base_perf = 1
         for key,val in opt_level.items():
-            os.system("clang++ -g --target=riscv64-unknown-elf  -march=rv64gv0p10zfh0p1 \
+            os.system("clang++ -g --target=riscv64-unknown-elf  -march=rv64gcv -mattr=+zfh,+zvfh,+matrix \
                         -menable-experimental-extensions -mllvm  -riscv-v-vector-bits-min=128 \
                         -O%d -o rvv-test test_cast.cpp  ../../src/mat.cpp" % val)
             

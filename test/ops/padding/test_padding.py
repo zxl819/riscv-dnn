@@ -41,7 +41,7 @@ def test_padding(num, h, w, cin, pt=0, pb=0, pl=0, pr=0):
                  echo "Cycles: "$(($b-$a))
               ''' % (fun_start, fun_end))
 
-os.system("clang++  --target=riscv64-unknown-elf  -march=rv64gv0p10zfh0p1 -menable-experimental-extensions -mllvm -riscv-v-vector-bits-min=128 -O%d -o rvv-test test_padding.cpp  ../../src/mat.cpp" % o_level)
+os.system("clang++  --target=riscv64-unknown-elf  -march=rv64gcv -mattr=+zfh,+zvfh,+matrix -menable-experimental-extensions -mllvm -riscv-v-vector-bits-min=128 -O%d -o rvv-test test_padding.cpp  ../../src/mat.cpp" % o_level)
 test_padding(2, 5, 5, 3, 0, 0, 0, 0)
 test_padding(3, 7, 7, 3, 1, 1, 1, 1)
 test_padding(4, 7, 7, 3, 3, 3, 3, 3)

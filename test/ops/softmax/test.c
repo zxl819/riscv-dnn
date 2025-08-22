@@ -5,6 +5,8 @@
 #include "../../../src/perf.h"
 #include "../../../include/incbin.h"
 
+#include "./cpi.h"
+
 #include "params.h"
 
 INCBIN(srcData, "src.bin", ".scdata.params");
@@ -26,13 +28,15 @@ int main(int argc, char **argv)
     tensor_new_2d(srcMat, H, W, sizeof(float32_t), srcData);
     tensor_new_2d(dstMat, H, W, sizeof(float32_t), &dstData);
 
-    PERF_BEGIN();
+   // PERF_BEGIN();
 
-    for (int i = 0; i < NLOOPS; i++) {
-        softmax(&dstMat, &srcMat);
-    }
+    stats(
+        for (int i = 0; i < NLOOPS; i++) {        
+            softmax(&dstMat, &srcMat);                 
+        }
+    , 1) ;
 
-    PERF_END();        
+  //  PERF_END();        
 
     printf("End\n");
 

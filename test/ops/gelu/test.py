@@ -5,9 +5,12 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 
-sys.path.append("../../../utils") 
-from check import from_txt, check_to_txt
-from work import do_test
+sys.path.append("/nfs/home/zhengsihan/Code/new-tests/src-tests/riscv-dnn")
+from utils.check import from_txt, check_to_txt   # 从文本读取数据并比较
+from utils.work import do_test   # 执行测试
+#sys.path.append("../../../utils") 
+#from check import from_txt, check_to_txt
+#from work import do_test
 
 
 title = "Diffent Optimization levels for add operator"
@@ -28,6 +31,9 @@ def gelu(num, hin, win):
 
     vs1.tofile(f'build/{num}/src.bin')
     vd.tofile(f'build/{num}/golden.bin')
+
+    vs1.tofile(f'src.bin')
+    vd.tofile(f'golden.bin')
 
     return vd
 

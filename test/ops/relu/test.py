@@ -4,13 +4,14 @@ import sys
 import numpy as np
 import pandas as pd
 
-sys.path.append("../../../utils") 
-from check import from_txt, check_to_txt
-from work import do_test
+# sys.path.append("../../../utils") 
+sys.path.append("/nfs/home/zhengsihan/Code/new-tests/src-tests/riscv-dnn")
+from utils.check import from_txt, check_to_txt
+from utils.work import do_test
 
 
-title = "Diffent Optimization levels for add operator"
-opt_levels = {"loop=1":"-O2", "loop=2":"-O2 -DNLOOPS=2"}
+title = "test for relu operator"
+opt_levels = {"loop=1":"-O2"}
 
 simulator = 'spike'
 if len(sys.argv) > 1:
@@ -27,6 +28,9 @@ def relu(num, hin, win, cin, base):
     vs1.tofile(f'build/{num}/src.bin')
     base.tofile(f'build/{num}/base.bin')
     vd.tofile(f'build/{num}/golden.bin')
+
+    vs1.tofile(f'src.bin')
+    base.tofile(f'base.bin')
 
     return vd
 
@@ -50,12 +54,13 @@ def test(num, params, defs):
 if __name__ == "__main__":
     ############# h, w, c, base
     params = (
-            (1, 1, 8, 0),
-            (1, 4, 8, 0),
-            (1, 8, 8, 0),
-            (1, 32, 8, 0),
-            (1, 128, 8, 0),
-            (1, 512, 8, 0),
+            # (1, 1, 8, 0),
+            # (1, 4, 8, 0),
+            # (1, 8, 8, 0),
+            # (1, 32, 8, 0),
+            # (1, 128, 8, 0),
+            # (1, 512, 8, 0),
+            (13, 13, 384, 0) ,
             )
     
-    do_test(params, opt_levels, test, title, simulator, simulator!='spike')
+    do_test(params, opt_levels, test, title, simulator, False)

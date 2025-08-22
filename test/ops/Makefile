@@ -1,17 +1,19 @@
-SIM ?= spike
+SIM := spike
 
-SUBDIRS= \
-	add \
-	avgpool \
-	batchnorm \
-	cast \
-	conv \
-	exp \
-	matmul \
-	maxpool \
-	padding \
-	relu \
-	softmax
+# SUBDIRS= \
+# 	add \
+# 	avgpool \
+# 	batchnorm \
+# 	cast \
+# 	conv \
+# 	exp \
+# 	matmul \
+# 	maxpool \
+# 	padding \
+# 	relu \
+# 	softmax
+
+ SUBDIRS=matmul
 
 all: $(SUBDIRS)
 

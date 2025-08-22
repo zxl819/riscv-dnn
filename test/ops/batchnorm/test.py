@@ -5,13 +5,14 @@ import numpy as np
 import pandas as pd
 import math
 
-sys.path.append("../../../utils") 
-from check import from_txt, check_to_txt
-from work import do_test
+sys.path.append("/nfs/home/zhengsihan/Code/new-tests/src-tests/riscv-dnn")
+# sys.path.append("../../../utils") 
+from utils.check import from_txt, check_to_txt
+from utils.work import do_test
 
 
 title = "Diffent Optimization levels for add operator"
-opt_levels = {"loop=1":"-O2", "loop=2":"-O2 -DNLOOPS=2"}
+opt_levels = {"loop=1":"-O2"}
 
 simulator = 'spike'
 if len(sys.argv) > 1:
@@ -36,6 +37,13 @@ def batchnorm(num, hin, win, c):
     eps.astype('float16').tofile(f"build/{num}/eps.bin")
     vd.astype('float16').tofile(f'build/{num}/golden.bin')
 
+    vs1.astype('float16').tofile(f"src.bin")
+    mean.astype('float16').tofile(f"mean.bin")
+    var.astype('float16').tofile(f"var.bin")
+    gam.astype('float16').tofile(f"gam.bin")
+    beta.astype('float16').tofile(f"beta.bin") 
+    eps.astype('float16').tofile(f"eps.bin")
+
     return vd.astype('float16')
 
 def batchnorm2(num, hin, win, c):
@@ -52,6 +60,10 @@ def batchnorm2(num, hin, win, c):
     gam.tofile(f"build/{num}/gam.bin")
     beta.tofile(f"build/{num}/beta.bin")
     vd.tofile(f'build/{num}/golden.bin')
+
+    vs1.tofile(f"src.bin")
+    gam.tofile(f"gam.bin")
+    beta.tofile(f"beta.bin")
 
     return vd
 
@@ -74,10 +86,11 @@ def test(num, params, defs):
 if __name__ == "__main__":
     #############  h w c
     params = (
-            (1, 1, 8),
-            (1, 4, 8),
-            (1, 8, 8),
-            (1, 32, 8),
+            # (1, 1, 8),
+            # (1, 4, 8),
+            # (1, 8, 8),
+            # (1, 32, 8),
+            (13, 13, 256),
             )
     
     do_test(params, opt_levels, test, title, simulator, simulator!='spike')

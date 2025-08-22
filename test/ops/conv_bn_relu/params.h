@@ -2,27 +2,27 @@
 #define __PARAMS_H__
 
 #ifndef HIN
-#define HIN 7
+#define HIN 224
 #endif
 
 #ifndef WIN
-#define WIN 7
+#define WIN 224
 #endif
 
 #ifndef CIN
-#define CIN 64
+#define CIN 2
 #endif
 
 #ifndef COUT
-#define COUT 64
+#define COUT 96
 #endif
 
 #ifndef KH
-#define KH 3
+#define KH 11
 #endif
 
 #ifndef KW
-#define KW 3
+#define KW 11
 #endif
 
 #ifndef STRIDE_H
@@ -42,19 +42,19 @@
 #endif
 
 #ifndef PAD_TOP
-#define PAD_TOP 0
+#define PAD_TOP 2
 #endif
 
 #ifndef PAD_BOTTOM
-#define PAD_BOTTOM 0
+#define PAD_BOTTOM 1
 #endif
 
 #ifndef PAD_LEFT
-#define PAD_LEFT 0
+#define PAD_LEFT 2
 #endif
 
 #ifndef PAD_RIGHT
-#define PAD_RIGHT 0
+#define PAD_RIGHT 1
 #endif
 
 #define HOUT ( (HIN + PAD_TOP + PAD_BOTTOM - DILATION_H * (KH - 1) - 1) / STRIDE_H + 1)

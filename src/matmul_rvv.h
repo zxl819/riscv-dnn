@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <riscv_vector.h>
 
-//#define FP16_ACC16 1
+#define FP16_ACC16 1
 
 static inline int matmul(Tensor *dst, Tensor *src1, Tensor *src2)
 {

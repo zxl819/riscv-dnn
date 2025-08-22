@@ -2,15 +2,15 @@
 #define __PARAMS_H__
 
 #ifndef H
-#define H 64
+#define H 13
 #endif
 
 #ifndef W
-#define W 64
+#define W 13
 #endif
 
 #ifndef C
-#define C 1
+#define C 256
 #endif
 
 #define SIZE  (H * W * C)

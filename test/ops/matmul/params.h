@@ -2,15 +2,15 @@
 #define __PARAMS_H__
 
 #ifndef M
-#define M 64
+#define M 16384
 #endif
 
 #ifndef K
-#define K 64
+#define K 300
 #endif
 
 #ifndef N
-#define N 64
+#define N 300
 #endif
 
 #define OUT_SIZE  (M * N)

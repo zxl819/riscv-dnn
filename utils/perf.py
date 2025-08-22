@@ -247,6 +247,12 @@ def get_perf_data(datapath, simulator, ncores):
         return vcs_get_perf_data(datapath, ncores)
     elif simulator == 'gem5':
         return gem5_get_perf_data(datapath, ncores)
+    elif simulator == 'spike':
+        # 假设 spike 不支持性能数据，返回默认值
+        default_perf_data = {col: 0 for col in ['Workload', 'Cycles', 'IPC', 'Front', 'BS', 'MEM', 'CORE', 'Retire']}
+        default_cycle = 0
+        return default_perf_data, default_cycle
+
 
 if __name__ == "__main__":
     generate_perf_report(title, setups)

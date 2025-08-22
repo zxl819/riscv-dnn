@@ -7,6 +7,7 @@
 #include "../../../src/perf.h"
 
 #include "params.h"
+#include "./cpi.h"
 
 INCBIN(srcData, "src.bin", ".scdata.params");
 INCBIN(weightData, "weight.bin", ".scdata.params");
@@ -36,7 +37,9 @@ int main(int argc, char **argv) {
   PERF_BEGIN();
 
   for (int i = 0; i < NLOOPS; i++) {
-    conv(&dstMat, &srcMat, &weightMat, &srcPad, &sst);
+     stats(
+          conv(&dstMat, &srcMat, &weightMat, &srcPad, &sst);
+        ,1) ;
   }
 
   PERF_END();

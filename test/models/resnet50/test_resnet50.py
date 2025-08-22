@@ -4,10 +4,11 @@ import numpy as np
 import os
 import sys
 
-sys.path.append("../../../utils")
-from check import from_txt, check_to_txt, get_sig_addr
-from perf import gem5_get_perf_data, vcs_get_perf_data, generate_perf_report
-from tma import *
+sys.path.append("/nfs/home/zhengsihan/Code/new-tests/src-tests/riscv-dnn")
+# sys.path.append("../../../utils")
+from  utils.check import from_txt, check_to_txt, get_sig_addr
+from  utils.perf import gem5_get_perf_data, vcs_get_perf_data, generate_perf_report
+from  utils.tma import *
 
 # Tensorflow imports
 import tensorflow.compat.v1 as tf

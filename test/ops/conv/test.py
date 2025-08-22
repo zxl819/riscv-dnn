@@ -7,9 +7,10 @@ import pandas as pd
 
 import tensorflow as tf
 
-sys.path.append("../../../utils") 
-from check import from_txt, check_to_txt
-from work import do_test
+# sys.path.append("../../../utils") 
+sys.path.append("/nfs/home/zhengsihan/Code/new-tests/src-tests/riscv-dnn")
+from utils.check import from_txt, check_to_txt
+from utils.work import do_test
 
 
 title = "Diffent Optimization levels for conv operator"
@@ -20,7 +21,7 @@ if len(sys.argv) > 1:
 print("run on %s" % simulator)
 
 if simulator == 'spike':
-    opt_levels = {"RVV":"-O2", "RVM":"-O2 -D__RVM__"}
+    opt_levels = { "RVM":"-O2 -D__RVM__"}
 
 def conv(num, hin, win, cin, cout, kh, kw, sh=1, sw=1, dh=1, dw=1, pt=0, pb=0, pl=0, pr=0):
     shape_input = [1, hin, win, cin]
@@ -29,11 +30,16 @@ def conv(num, hin, win, cin, cout, kh, kw, sh=1, sw=1, dh=1, dw=1, pt=0, pb=0, p
     vs2 = np.random.random(shape_weight).astype('float16') * 2 - 1
     tf_pad = [[0, 0], [pt, pb], [pl, pr], [0, 0]]
     vd = tf.nn.conv2d(vs1, vs2, [1, sh, sw, 1], tf_pad, data_format='NHWC', dilations=[1, dh, dw, 1])
+    vd = tf.nn.relu(vd)   # relu
+
     vd = vd.numpy()
 
     vs1.tofile(f"build/{num}/src.bin")
     vs2.tofile(f"build/{num}/weight.bin")
     vd.tofile(f'build/{num}/golden.bin')
+
+    vs1.tofile(f"src.bin")
+    vs2.tofile(f"weight.bin")
 
     return vd
 
@@ -88,30 +94,19 @@ if __name__ == "__main__":
     #                                               pt=0, pb=0, pl=0, pr=0
     os.system("rm *.o")
     params = (
-        # # stage 0
-        (224, 224, 3, 64, 7, 7,   2, 2,  1, 1,   3, 3, 3, 3),
-        # # stage 1
-        (56, 56, 64, 256, 1, 1,   1, 1,  1, 1,   0, 0, 0, 0),
-        (56, 56, 256, 512, 1, 1,   2, 2,  1, 1,   0, 0, 0, 0),
-        # # stage 4
-        # (28, 28, 512, 1024, 1, 1,   2, 2,  1, 1,   0, 0, 0, 0),
-        # (14, 14, 1024, 2048, 1, 1,   2, 2,  1, 1,   0, 0, 0, 0),
-        # (8, 8, 8, 8, 3, 3,   1, 1,  1, 1,   1, 1, 1, 1),
-        # (8, 8, 8, 8, 3, 3,   2, 2,  1, 1,   0, 0, 0, 0),
-        # (8, 8, 8, 8, 3, 3,   1, 1,  2, 2,   0, 0, 0, 0),
-        # (8, 8, 8, 8, 3, 3,   2, 2,  2, 2,   1, 1, 1, 1),
-        # (18, 18, 16, 16, 3, 3,   1, 1,  1, 1,   0, 0, 0, 0),
-        # (16, 16, 16, 16, 3, 3,   1, 1,  1, 1,   1, 1, 1, 1),
-        # (16, 16, 16, 16, 3, 3,   2, 2,  1, 1,   0, 0, 0, 0),
-        # (16, 16, 16, 16, 3, 3,   1, 1,  2, 2,   0, 0, 0, 0),
+
+        # AlexNet
+        # (224, 224, 3, 96, 11, 11,   4, 4,  1, 1,   2, 1, 2, 1),
+        # (27, 27, 96, 256, 5, 5, 1, 1, 1, 1, 2, 2, 2, 2 ),
+        # (13, 13, 384, 256, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1 ),
+
+        #ResNet50
+        # (224, 224, 3, 64, 7, 7,   2, 2,  1, 1,   3, 3, 3, 3),
+
 
         # conv
-        # (18, 18, 16,  16,  3, 3,   1, 1,  1, 1,   0, 0, 0, 0),
-        # (18, 18, 16,  64,  3, 3,   1, 1,  1, 1,   0, 0, 0, 0),
-        # (18, 18, 16,  128, 3, 3,   1, 1,  1, 1,   0, 0, 0, 0),
-        # (18, 18, 16,  16,  7, 7,   1, 1,  1, 1,   0, 0, 0, 0),
-        # (18, 18, 16,  64,  7, 7,   1, 1,  1, 1,   0, 0, 0, 0),
-        # (18, 18, 16,  128, 7, 7,   1, 1,  1, 1,   0, 0, 0, 0),
+        # (64, 64, 16,  16,  3, 3,   1, 1,  1, 1,   0, 0, 0, 0),
+        # (64, 64, 16,  128,  3, 3,   1, 1,  1, 1,   0, 0, 0, 0),
 
         # (18, 18, 64,  16,  3, 3,   1, 1,  1, 1,   0, 0, 0, 0),
         # (18, 18, 64,  64,  3, 3,   1, 1,  1, 1,   0, 0, 0, 0),
@@ -210,4 +205,4 @@ if __name__ == "__main__":
         # (16, 16, 128, 128,  7, 7,   1, 1,  1, 1,   3, 3, 3, 3),
     )
     
-    do_test(params, opt_levels, test, title, simulator, simulator!='spike')
+    do_test(params, opt_levels, test, title, simulator, False)

@@ -7,14 +7,15 @@ import pandas as pd
 
 import tensorflow as tf
 
-sys.path.append("../../../utils") 
-from check import from_txt, check_to_txt
-from work import do_test
+sys.path.append("/nfs/home/zhengsihan/Code/new-tests/src-tests/riscv-dnn")
+# sys.path.append("../../../utils") 
+from utils.check import from_txt, check_to_txt
+from utils.work import do_test
 
 
-title = "Diffent Optimization levels for conv operator"
+title = "test for conv operator"
 
-opt_levels = {"im2col10":"-O2 -DNLOOPS=10 -D__RVM__", "im2col14":"-O2 -DNLOOPS=14 -D__RVM__"}
+opt_levels = {"im2col10":"-O2 -DNLOOPS=1 -D__RVM__"}
 
 
 simulator = 'spike'
@@ -46,6 +47,11 @@ def conv_bn_relu(num, hin, win, cin, cout, kh, kw, sh=1, sw=1, dh=1, dw=1, pt=0,
     alpha.tofile(f"build/{num}/alpha.bin")
     beta.tofile(f"build/{num}/beta.bin")
     vd.tofile(f'build/{num}/golden.bin')
+
+    vs1.tofile(f"src.bin")
+    vs2.tofile(f"weight.bin")
+    alpha.tofile(f"alpha.bin")
+    beta.tofile(f"beta.bin")
 
     return vd
 
@@ -100,6 +106,9 @@ if __name__ == "__main__":
     #                                      dh=1, dw=1
     #                                               pt=0, pb=0, pl=0, pr=0
     params = (
+
+        (224, 224, 3, 96, 11, 11,   4, 4,  1, 1,   2, 1, 2, 1),
+        # (27, 27, 96, 256, 5, 5, 1, 1, 1, 1, 2, 2, 2, 2 ),
         # # stage 1
         # (56, 56, 64, 64, 1, 1,   1, 1,  1, 1,   0, 0, 0, 0),
         # (56, 56, 64, 64, 3, 3,   1, 1,  1, 1,   1, 1, 1, 1),
@@ -112,7 +121,7 @@ if __name__ == "__main__":
         # # stage 3
         # (28, 28, 512, 256, 1, 1,   1, 1,  1, 1,   0, 0, 0, 0),
         # (28, 28, 256, 256, 3, 3,   2, 2,  1, 1,   1, 1, 1, 1),
-        (14, 14, 1024, 256, 1, 1,   1, 1,  1, 1,   0, 0, 0, 0),
+        # (14, 14, 1024, 256, 1, 1,   1, 1,  1, 1,   0, 0, 0, 0),
         # (14, 14, 256, 256, 3, 3,   1, 1,  1, 1,   1, 1, 1, 1),
         # # # stage 4
         # (14, 14, 1024, 512, 1, 1,   1, 1,  1, 1,   0, 0, 0, 0),

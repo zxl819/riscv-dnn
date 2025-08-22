@@ -4,19 +4,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "add.h"
-#include "batchnorm.h"
-#include "cast.h"
-#include "conv.h"
-#include "conv_add_bn_relu_rvm.h"
-#include "conv_bn_relu_rvm.h"
-#include "conv_im2col.h"
-#include "matmul.h"
-#include "padding.h"
-#include "pooling.h"
-#include "pooling_bn_relu.h"
-#include "relu.h"
-#include "softmax.h"
+#include "./../../../src/add.h"
+#include "./../../../src/batchnorm.h"
+#include "./../../../src/cast.h"
+#include "./../../../src/conv.h"
+#include "./../../../src/conv_add_bn_relu_rvm.h"
+#include "./../../../src/conv_bn_relu_rvm.h"
+#include "./../../../src/conv_im2col.h"
+#include "./../../../src/matmul.h"
+#include "./../../../src/padding.h"
+#include "./../../../src/pooling.h"
+#include "./../../../src/pooling_bn_relu.h"
+#include "./../../../src/relu.h"
+#include "./../../../src/softmax.h"
 
 #include "resnet50_parameters.h"
 

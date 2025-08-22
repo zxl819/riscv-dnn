@@ -2,10 +2,15 @@
 #include <stdlib.h>
 
 #include "../../../src/batchnorm.h"
+
+
+
 #include "../../../src/perf.h"
 #include "../../../include/incbin.h"
 
 #include "params.h"
+
+#include "cpi.h"
 
 INCBIN(srcData, "src.bin", ".scdata.params");
 INCBIN(gamData, "gam.bin", ".scdata.params");
@@ -34,7 +39,8 @@ int main(int argc, char **argv)
     PERF_BEGIN();
 
     for (int i = 0; i < NLOOPS; i++) {
-        batchnorm(&dstMat, &srcMat, &gamMat, &betaMat);
+        stats( batchnorm(&dstMat, &srcMat, &gamMat, &betaMat); ,1 );
+        
     }
 
     PERF_END();

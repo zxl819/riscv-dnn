@@ -37,7 +37,7 @@ static inline int conv_im2col(Tensor *dst, Tensor *src, Tensor *weight,
   float16_t *pdst = (float16_t *)dst->data;
 
   int stride_s1 = src->stride;
-  int stride_s2 = weight->stride;
+  int stride_s2 = weight->stride;  
   int stride_d = dst->stride;
 
   int moutsh = hout << 16 | wout;

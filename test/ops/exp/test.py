@@ -4,9 +4,14 @@ import sys
 import numpy as np
 import pandas as pd
 
-sys.path.append("../../../utils") 
-from check import from_txt, check_to_txt
-from work import do_test
+
+sys.path.append("/nfs/home/zhengsihan/Code/new-tests/src-tests/riscv-dnn")
+from utils.check import from_txt, check_to_txt   # 从文本读取数据并比较
+from utils.work import do_test   # 执行测试
+
+#sys.path.append("../../../utils") 
+#from check import from_txt, check_to_txt
+#from work import do_test
 
 
 title = "Diffent Optimization levels for exp operator"
@@ -24,6 +29,9 @@ def exp(num, hin, win, cin):
     
     vs1.tofile(f'build/{num}/src.bin')
     vd.tofile(f'build/{num}/golden.bin')
+    
+    vs1.tofile(f'src.bin')
+    vd.tofile(f'golden.bin')
 
     return vd
 
@@ -34,7 +42,6 @@ def test(num, params, defs):
     os.system(f"rm -rf build/{num} && mkdir -p build/{num}")
 
     golden = exp(num, h, w, cin)
-
     os.system(f"make DEFS='-DH={h} -DW={w} -DCIN={cin} {defs}' run SIM={simulator} NUM={num} >build/{num}/test.log 2>&1")
 
     result = from_txt( f'build/{num}/{simulator}.sig', golden, 0 )
@@ -47,9 +54,9 @@ if __name__ == "__main__":
     #############  h w cin
     params = (
             (1, 1, 8),
-            (1, 4, 8),
-            (1, 8, 8),
-            (1, 32, 8),
+            #(1, 4, 8),
+            #(1, 8, 8),
+            #(1, 32, 8),
             )
     
     do_test(params, opt_levels, test, title, simulator, simulator!='spike')

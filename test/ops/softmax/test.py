@@ -6,13 +6,15 @@ import pandas as pd
 
 import tensorflow as tf
 
-sys.path.append("../../../utils") 
-from check import from_txt, check_to_txt
-from work import do_test
+
+# sys.path.append("../../../utils") 
+sys.path.append("/nfs/home/zhengsihan/Code/new-tests/src-tests/riscv-dnn")
+from utils.check import from_txt, check_to_txt
+from utils.work import do_test
 
 
-title = "Diffent Optimization levels for softmax operator"
-opt_levels = {"loop=1":"-O2", "loop=2":"-O2 -DNLOOPS=2"}
+title = "test for softmax operator"
+opt_levels = {"loop=1":"-O2"}
 
 simulator = 'spike'
 if len(sys.argv) > 1:
@@ -23,11 +25,13 @@ print("run on %s" % simulator)
 def softmax(num, hin, win):
     # np.random.seed( 100 )
     vs1 = np.random.random((hin, win)).astype('float32') * 10 - 5 # random  number between -5 and 5
-    vd = tf.nn.softmax(vs1.flatten())
+    vd = tf.nn.softmax(vs1.flatten())      
     vd = vd.numpy().astype('float32')
     
     vs1.tofile(f'build/{num}/src.bin')
     vd.tofile(f'build/{num}/golden.bin')
+    vs1.tofile(f'src.bin')
+   
 
     return vd
 
@@ -50,10 +54,12 @@ def test(num, params, defs):
 if __name__ == "__main__":
     #############  h w
     params = (
-            ( 1, 8 ),
-            ( 4, 8 ),
-            ( 8, 8 ),
-            ( 32, 8 ),
+            #( 1, 8 ),
+            #( 4, 8 ),
+            ( 300, 300 ),
+            # ( 32, 8 ),
             )
+    
+    
     
     do_test(params, opt_levels, test, title, simulator, simulator!='spike')

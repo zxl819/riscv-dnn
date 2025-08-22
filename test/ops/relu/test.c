@@ -6,6 +6,7 @@
 #include "../../../include/incbin.h"
 
 #include "params.h"
+#include "cpi.h"
 
 INCBIN(srcData, "src.bin", ".scdata.params");
 INCBIN(baseData, "base.bin", ".scdata.params");
@@ -33,7 +34,8 @@ int main(int argc, char **argv)
     PERF_BEGIN();
 
     for (int i = 0; i < NLOOPS; i++) {
-        relu(&dstMat, &srcMat, base);
+        stats(   relu(&dstMat, &srcMat, base); ,1);        
+
     }
 
     PERF_END();

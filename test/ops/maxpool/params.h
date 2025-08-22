@@ -2,15 +2,15 @@
 #define __PARAMS_H__
 
 #ifndef HIN
-#define HIN 7
+#define HIN 13
 #endif
 
 #ifndef WIN
-#define WIN 7
+#define WIN 13
 #endif
 
 #ifndef CIN
-#define CIN 64
+#define CIN 256
 #endif
 
 #ifndef KH
@@ -22,11 +22,11 @@
 #endif
 
 #ifndef STRIDE_H
-#define STRIDE_H 1
+#define STRIDE_H 2
 #endif
 
 #ifndef STRIDE_W
-#define STRIDE_W 1
+#define STRIDE_W 2
 #endif
 
 #ifndef PAD_TOP

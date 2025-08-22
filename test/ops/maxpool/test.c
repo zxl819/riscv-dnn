@@ -7,6 +7,8 @@
 #include "../../../src/pooling.h"
 #include "params.h"
 
+#include "cpi.h"
+
 INCBIN(srcData, "src.bin", ".scdata.params");
 
 uint8_t dstData[OUT_SIZE * sizeof(float16_t)]
@@ -24,7 +26,9 @@ int main(int argc, char **argv) {
   PERF_BEGIN();
 
   for (int i = 0; i < NLOOPS; i++) {
-    maxpool(&dstMat, &srcMat, &sst);
+    stats(
+        maxpool(&dstMat, &srcMat, &sst);
+    ,1);
   }
 
   PERF_END();
