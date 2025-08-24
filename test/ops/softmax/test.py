@@ -8,7 +8,7 @@ import tensorflow as tf
 
 
 # sys.path.append("../../../utils") 
-sys.path.append("/nfs/home/zhengsihan/Code/new-tests/src-tests/riscv-dnn")
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..')))
 from utils.check import from_txt, check_to_txt
 from utils.work import do_test
 

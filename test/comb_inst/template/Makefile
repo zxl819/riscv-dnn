@@ -2,7 +2,6 @@ include ../../../common-2xl.mk
 
 # 生成 test.c 的汇编文件：build/$(NUM)/test.s
 # 用法：make NUM=1 ENABLE_RVM_MATRIX=1 asm
-# make NUM=2 LAYOUT_COMPACT=1 ENABLE_RVM_MATRIX=1 asm
 asm: build/$(NUM)/test.s
 
 build/$(NUM)/test.s: test.c

@@ -1,1 +1,1 @@
-include ../../../common.mk
+include ../../../common-2xl.mk

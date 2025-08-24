@@ -4,9 +4,10 @@ import sys
 import numpy as np
 import pandas as pd
 
-sys.path.append("../../../utils") 
-from check import from_txt, check_to_txt
-from work import do_test
+# Ensure project root is on sys.path so `from utils.xxx import ...` works
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..')))
+from utils.check import from_txt, check_to_txt
+from utils.work import do_test
 
 
 title = "Diffent Optimization levels for add operator"

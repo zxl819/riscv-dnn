@@ -3,11 +3,11 @@
 
 // #include <stdint.h>
 
-#include "../../../src/matmul.h"
-//#include "../../../src/perf.h"
+#include "../../../src/matmul_tile.h"
+#include "../../../src/perf.h"
 #include "../../../include/incbin.h"
 
-//#include "./cpi.h"
+#include "./cpi.h"
 
 #include "params.h"
 
@@ -21,16 +21,12 @@ uint8_t dstData[OUT_SIZE * sizeof(float16_t)] __attribute__((__section__(".scdat
 
 int main(int argc, char **argv)
 {
-    printf("Begin\n");
 
-    const int m = M;
-    const int k = K;
-    const int n = N;
+    const int m = 100;
+    const int k = 100;
+    const int n = 100;
 
-    if (DEBUG_PRINT) {
-        printf("In Shape:\n\t(m, k, n) = (%d, %d, %d)\n",
-                    m, k, n);
-    }
+
 
     // 创建源矩阵、目标矩阵，初始化矩阵数据
     tensor_new_2d(src1Mat, m, k, sizeof(float16_t), src1Data);  // src1data初始化src1Mat矩阵
@@ -38,15 +34,12 @@ int main(int argc, char **argv)
     tensor_new_2d(dstMat, m, n, sizeof(float16_t), &dstData);
 
     // PERF_BEGIN();  // perf计算开始
-    // stats(
+    stats(
         for (int i = 0; i < NLOOPS; i++) {
             matmul(&dstMat, &src1Mat, &src2Mat);
         }
-    // , 1) ;
+    , 1) ;
 
-    // PERF_END();   // perf计算结束
-    
-    printf("End\n");
 
     return 0;
 }

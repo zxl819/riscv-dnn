@@ -6,7 +6,8 @@ import pandas as pd
 import tensorflow as tf
 from decimal import Decimal
 sys.path.append("..") 
-from check import check,get_perf,get_tma
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..')))
+#from utils.check import get_perf,get_tma
 
 TEST_OPTION = {"func": True, "perf": False}
 

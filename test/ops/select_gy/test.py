@@ -8,7 +8,8 @@ import numpy as np
 import pandas as pd
 import math
 
-sys.path.append("/nfs/home/zhengsihan/Code/new-tests/src-tests/riscv-dnn")
+#sys.path.append("/nfs/home/zhengsihan/Code/new-tests/src-tests/riscv-dnn")
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..')))
 from utils.check import from_txt, check_to_txt   # 从文本读取数据并比较
 from utils.work import do_test   # 执行测试
 

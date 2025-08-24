@@ -72,8 +72,10 @@ CFLAGS := \
 	-menable-experimental-extensions -DPREALLOCATE=1 \
 	-mno-relax \
 	-mcmodel=medany -static -std=gnu99 -O2 -ffast-math \
-	-fno-common -fno-builtin-printf -mabi=lp64d  -nostdlib -nostartfiles
+	-fno-common -fno-builtin-printf -nostdlib -nostartfiles
 CFLAGS += $(includes) -I$(top_dir)/include
+#-mcmodel=medany -static -std=gnu99 -O2 -ffast-math 
+#-fno-common -fno-builtin-printf -mabi=lp64d  -nostdlib -nostartfiles
 
 # 根据是否启用 RVM，调整宏定义（默认使用 stub；启用 RVM 则使用真实头并切换实现）
 ifeq ($(ENABLE_RVM_MATRIX),1)
@@ -128,12 +130,14 @@ CXXFLAGS := \
 	--target=riscv64-unknown-elf -march=$(RV_MARCH) \
 	-menable-experimental-extensions -DPREALLOCATE=1 \
 	-mno-relax \
-	-mcmodel=medany -static -std=c++20 -O2 -ffast-math \
-	-fno-exceptions -fno-rtti -fno-common -fno-builtin-printf -mabi=lp64d \
+	-mcmodel=medany -static -std=c++20 -O2 \
+	-fno-exceptions -fno-rtti -fno-common -fno-builtin-printf \
 	-D_LIBCPP_HAS_NO_LIBRARY_ALIGNED_ALLOCATION -D_LIBCPP_HAS_NO_ALIGNED_ALLOCATION -D_LIBCPP_HAS_NO_C11_ALIGNED_ALLOC \
 	-D_LIBCPP_HAS_NO_MONOTONIC_CLOCK -D_LIBCPP_ENABLE_ASSERTIONS=0 \
 	-nostdlib -nostartfiles -nostdinc++
 CXXFLAGS += $(includes) -I$(top_dir)/include
+#-mcmodel=medany -static -std=c++20 -O2 -ffast-math 
+#-fno-exceptions -fno-rtti -fno-common -fno-builtin-printf -mabi=lp64d
 
 ifeq ($(ENABLE_RVM_MATRIX),1)
 CXXFLAGS += -DENABLE_RVM_MATRIX -U RVDNN_FORCE_STUB_MATRIX -D__riscv_matrix=1
@@ -144,12 +148,15 @@ endif
 target_elf = build/$(NUM)/test.elf
 target_dump = build/$(NUM)/test.dump
 target_map = build/$(NUM)/test.map
-objects = build/$(NUM)/test.o crt.o syscalls.o
+objects = build/$(NUM)/test.o crt.o syscalls.o syscall_stubs.o
 # - syscalls.o / crt.o：单独规则编译启动与系统调用封装。
 # - test.o：根据是否启用 libc++ 选择 C 或 C++ 编译器（TEST_C_COMPILER / TEST_C_FLAGS）
 all: $(target_elf)
 
 syscalls.o: $(inc_dir)/common/syscalls.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+syscall_stubs.o: $(inc_dir)/common/syscall_stubs.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 crt.o: $(inc_dir)/common/crt.S
@@ -168,6 +175,14 @@ build/$(NUM)/test.o: test.c
 	@mkdir -p $(dir $@)
 	$(TEST_C_COMPILER) $(TEST_C_FLAGS) -c -o $@ $<
 
+# 生成 test.c 的汇编文件：build/$(NUM)/test.s
+# 用法：make NUM=1 ENABLE_RVM_MATRIX=1 asm
+asm: build/$(NUM)/test.s
+
+build/$(NUM)/test.s: test.c
+	@mkdir -p $(dir $@)
+	$(TEST_C_COMPILER) $(TEST_C_FLAGS) -S -fverbose-asm -o $@ $<
+	@echo "[ASM] $@ generated"
 .c.o:
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c -o $@ $<
