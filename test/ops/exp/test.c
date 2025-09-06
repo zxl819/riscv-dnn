@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../../../src/exp.h"
+#include "../../../src/exp_rvm.h"
 #include "../../../src/perf.h"
 #include "../../../include/incbin.h"
 
@@ -30,7 +30,7 @@ int main(int argc, char **argv)
     PERF_BEGIN();
 
     for (int i = 0; i < NLOOPS; i++) {
-        exp(&dstMat, &srcMat);
+        exp_rvm(&dstMat, &srcMat);
     }
 
     PERF_END();

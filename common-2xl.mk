@@ -33,7 +33,8 @@ TC ?= llvm
 
 NCORES := 1
 
-SPIKE := spike
+#SPIKE := spike
+SPIKE := /home/xl2025/riscv-matrix-project/riscv-isa-sim/build/xspike
 SPIKE_ARGS :=
 
 
@@ -52,16 +53,32 @@ OBJDUMP := $(PREFIX)objdump
 
 # CLANG_HOME 设定后 CC / CXX 指向自编 LLVM。
 CLANG_HOME := $(HOME)/opt/riscv/riscv-matrix-project/llvm-project
+#CLANG_HOME := $(HOME)/opt/riscv-llvm/bin/
 CC := $(CLANG_HOME)/build-ninja/bin/clang
 CXX := $(CLANG_HOME)/build-ninja/bin/clang++
-
+#CC := $(CLANG_HOME)/clang
+#CXX := $(CLANG_HOME)/clang++
 # RISC-V 架构字符串（可覆盖）。
 # 说明：Clang 14 仍将 V 扩展视作实验特性，需要显式版本号（如 v0p10）。
 # 如使用较新编译器（已支持稳定 V 扩展），可覆盖为 rv64gcv_zfh_zvfh。
+# RV_MARCH ?= rv64gcv_zfh_zvfh
 RV_MARCH ?= rv64gcv0p10_zfh0p1
 # 是否启用 Matrix 扩展实现（RVM）。0=默认关闭（使用 RVV 实现）；1=开启（使用 RVM 实现）
 ENABLE_RVM_MATRIX ?= 0
 # 编译公共 C/C++ 选项
+# CFLAGS := \
+# 	--sysroot=$(SYSROOT) \
+# 	-I$(RISCV_HOME)/include \
+# 	-I$(SYSROOT)/include \
+# 	$(if $(and $(LIBCXX_ENABLE),$(wildcard $(LIBCXX_INCLUDEDIR))),-I$(LIBCXX_INCLUDEDIR)) \
+# 	-I$(RISCV_HOME)/riscv64-unknown-elf/riscv64-unknown-elf/include/ \
+# 	--target=riscv64-unknown-elf -march=$(RV_MARCH) \
+# 	-menable-experimental-extensions -DPREALLOCATE=1 \
+# 	-mno-relax \
+# 	-mcmodel=medany -static -std=gnu99 -O0 -ffast-math \
+# 	-fno-common -fno-builtin-printf -nostdlib -nostartfiles \
+# 	-mabi=lp64d
+RELAX_DISABLE = -mno-relax
 CFLAGS := \
 	--sysroot=$(SYSROOT) \
 	-I$(RISCV_HOME)/include \
@@ -69,10 +86,13 @@ CFLAGS := \
 	$(if $(and $(LIBCXX_ENABLE),$(wildcard $(LIBCXX_INCLUDEDIR))),-I$(LIBCXX_INCLUDEDIR)) \
 	-I$(RISCV_HOME)/riscv64-unknown-elf/riscv64-unknown-elf/include/ \
 	--target=riscv64-unknown-elf -march=$(RV_MARCH) \
-	-menable-experimental-extensions -DPREALLOCATE=1 \
-	-mno-relax \
-	-mcmodel=medany -static -std=gnu99 -O2 -ffast-math \
-	-fno-common -fno-builtin-printf -nostdlib -nostartfiles
+	-menable-experimental-extensions  \
+	$(RELAX_DISABLE) \
+	-mcmodel=medany -static -fvisibility=hidden -O2 \
+	-D_LIBCPP_HAS_NO_LIBRARY_ALIGNED_ALLOCAsTION -D_LIBCPP_HAS_NO_ALIGNED_ALLOCATION -D_LIBCPP_HAS_NO_C11_ALIGNED_ALLOC \
+	-D_LIBCPP_HAS_NO_MONOTONIC_CLOCK -D_LIBCPP_ENABLE_ASSERTIONS=0 \
+	-nostdlib -nostartfiles -g
+
 CFLAGS += $(includes) -I$(top_dir)/include
 #-mcmodel=medany -static -std=gnu99 -O2 -ffast-math 
 #-fno-common -fno-builtin-printf -mabi=lp64d  -nostdlib -nostartfiles
@@ -94,13 +114,42 @@ LINK := $(CXX)
 	
 
 # 可选紧凑布局：避免原 test.ld 巨大 ALIGN 造成 500MB 级文件
+# LAYOUT_COMPACT ?= 0
+# ifeq ($(LAYOUT_COMPACT),1)
+# LDSCRIPT := $(inc_dir)/common/test_compact.ld
+# else
+# LDSCRIPT := $(inc_dir)/common/test.ld
+# endif
 LAYOUT_COMPACT ?= 0
 ifeq ($(LAYOUT_COMPACT),1)
-LDSCRIPT := $(inc_dir)/common/test_compact.ld
+LDSCRIPT := $(inc_dir)/link.ld
+STARTUP := $(inc_dir)/common/crt.S
 else
-LDSCRIPT := $(inc_dir)/common/test.ld
+LDSCRIPT := $(inc_dir)/link.ld
+STARTUP := $(inc_dir)/common/crt.S
 endif
 
+# MODE ?= default
+# ifeq ($(MODE), default)
+# LDSCRIPT := $(inc_dir)/common/default.ld
+# STARTUP := $(inc_dir)/common/crt.S
+# else
+# LDSCRIPT := $(inc_dir)/common/test.ld
+# endif
+
+
+
+# # 启动文件编译
+# build/$(NUM)/start.o: $(STARTUP)
+# 	@mkdir -p $(dir $@)
+# 	$(CC) $(CFLAGS) -c $< -o $@
+
+# # 链接时加入启动文件
+# build/$(NUM)/test.elf: build/$(NUM)/test.o build/$(NUM)/start.o
+# 	$(CC) $(LDFLAGS) -T $(LDSCRIPT) $^ -o $@
+build/$(NUM)/start.o: $(STARTUP)
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) $(RELAX_DISABLE)-c $< -o $@
 # 基础链接 flags（裸机）
 LDFLAGS := \
 	--sysroot=$(SYSROOT) \
@@ -110,7 +159,7 @@ LDFLAGS := \
 	-static -nostdlib -nostartfiles -lm \
 	-Wl,--no-relax \
 	-fuse-ld=lld -rtlib=compiler-rt -unwindlib=libunwind \
-	-T $(LDSCRIPT)
+	-T $(LDSCRIPT) -mcmodel=medany
 
 # 启用 libc++ 时追加的链接 flags
 ifeq ($(LIBCXX_ENABLE),1)
@@ -120,7 +169,26 @@ LDFLAGS += \
 			-lc
 endif
 
+
+
 # C++ 编译选项（与构建的 libc++ 配置保持一致：无异常/RTTI，显式 C++ 头）
+# CXXFLAGS := \
+# 	--sysroot=$(SYSROOT) \
+# 	-I$(RISCV_HOME)/include \
+# 	-I$(SYSROOT)/include \
+# 	$(if $(and $(LIBCXX_ENABLE),$(wildcard $(LIBCXX_INCLUDEDIR))),-I$(LIBCXX_INCLUDEDIR)) \
+# 	-I$(RISCV_HOME)/riscv64-unknown-elf/riscv64-unknown-elf/include/ \
+# 	--target=riscv64-unknown-elf -march=$(RV_MARCH) \
+# 	-menable-experimental-extensions -DPREALLOCATE=1 \
+# 	-mno-relax \
+# 	-mcmodel=medany -static -std=c++20 -O0 \
+# 	-fno-exceptions -fno-rtti -fno-common -fno-builtin-printf \
+# 	-D_LIBCPP_HAS_NO_LIBRARY_ALIGNED_ALLOCATION -D_LIBCPP_HAS_NO_ALIGNED_ALLOCATION -D_LIBCPP_HAS_NO_C11_ALIGNED_ALLOC \
+# 	-D_LIBCPP_HAS_NO_MONOTONIC_CLOCK -D_LIBCPP_ENABLE_ASSERTIONS=0 \
+# 	-nostdlib -nostartfiles -nostdinc++
+
+
+
 CXXFLAGS := \
 	--sysroot=$(SYSROOT) \
 	-I$(RISCV_HOME)/include \
@@ -128,13 +196,12 @@ CXXFLAGS := \
 	$(if $(and $(LIBCXX_ENABLE),$(wildcard $(LIBCXX_INCLUDEDIR))),-I$(LIBCXX_INCLUDEDIR)) \
 	-I$(RISCV_HOME)/riscv64-unknown-elf/riscv64-unknown-elf/include/ \
 	--target=riscv64-unknown-elf -march=$(RV_MARCH) \
-	-menable-experimental-extensions -DPREALLOCATE=1 \
-	-mno-relax \
-	-mcmodel=medany -static -std=c++20 -O2 \
-	-fno-exceptions -fno-rtti -fno-common -fno-builtin-printf \
+	$(RELAX_DISABLE) \
+	-menable-experimental-extensions  \
+	-mcmodel=medany -static -fvisibility=hidden -O2\
 	-D_LIBCPP_HAS_NO_LIBRARY_ALIGNED_ALLOCATION -D_LIBCPP_HAS_NO_ALIGNED_ALLOCATION -D_LIBCPP_HAS_NO_C11_ALIGNED_ALLOC \
 	-D_LIBCPP_HAS_NO_MONOTONIC_CLOCK -D_LIBCPP_ENABLE_ASSERTIONS=0 \
-	-nostdlib -nostartfiles -nostdinc++
+	-nostdlib -nostartfiles -g 
 CXXFLAGS += $(includes) -I$(top_dir)/include
 #-mcmodel=medany -static -std=c++20 -O2 -ffast-math 
 #-fno-exceptions -fno-rtti -fno-common -fno-builtin-printf -mabi=lp64d
@@ -148,7 +215,18 @@ endif
 target_elf = build/$(NUM)/test.elf
 target_dump = build/$(NUM)/test.dump
 target_map = build/$(NUM)/test.map
-objects = build/$(NUM)/test.o crt.o syscalls.o syscall_stubs.o
+
+# ifeq ($(MODE), default)
+#   objects = build/$(NUM)/test.o syscalls.o syscall_stubs.o build/$(NUM)/start.o
+# else
+#   objects = build/$(NUM)/test.o crt.o syscalls.o syscall_stubs.o
+# endif
+ifeq ($(MODE), default)
+  objects = build/$(NUM)/test.o syscalls.o build/$(NUM)/start.o
+else
+  objects = build/$(NUM)/test.o crt.o syscalls.o 
+endif
+#objects = build/$(NUM)/test.o crt.o syscalls.o syscall_stubs.o
 # - syscalls.o / crt.o：单独规则编译启动与系统调用封装。
 # - test.o：根据是否启用 libc++ 选择 C 或 C++ 编译器（TEST_C_COMPILER / TEST_C_FLAGS）
 all: $(target_elf)
@@ -156,11 +234,11 @@ all: $(target_elf)
 syscalls.o: $(inc_dir)/common/syscalls.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-syscall_stubs.o: $(inc_dir)/common/syscall_stubs.c
-	$(CC) $(CFLAGS) -c -o $@ $<
+# syscall_stubs.o: $(inc_dir)/common/syscall_stubs.c
+# 	$(CC) $(CFLAGS) -c -o $@ $<
 
 crt.o: $(inc_dir)/common/crt.S
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) $(RELAX_DISABLE) -c -o $@ $<
 
 # 在启用 libc++ 时，允许测试主文件以 C++ 模式编译（因包含 <array> 等 C++ 头）
 ifeq ($(LIBCXX_ENABLE),1)
@@ -171,10 +249,24 @@ TEST_C_COMPILER := $(CC)
 TEST_C_FLAGS := $(CFLAGS)
 endif
 
+
+
+$(info CXXFLAGS=$(CXXFLAGS))
 build/$(NUM)/test.o: test.c
 	@mkdir -p $(dir $@)
-	$(TEST_C_COMPILER) $(TEST_C_FLAGS) -c -o $@ $<
+	$(TEST_C_COMPILER) $(TEST_C_FLAGS) $(RELAX_DISABLE) -c -o $@ $<
 
+# 占位二进制数据（若真实运行会被 Python/其它脚本覆盖）
+build/$(NUM)/src1.bin build/$(NUM)/src2.bin:
+	@mkdir -p $(dir $@)
+	@# 生成 32 字节零文件；按需要调整大小
+	@dd if=/dev/zero of=$@ bs=32 count=1 2>/dev/null
+
+asm_incbin: build/$(NUM)/test.s
+build/$(NUM)/test.s: test.c build/$(NUM)/src1.bin build/$(NUM)/src2.bin
+	@mkdir -p $(dir $@)
+	$(TEST_C_COMPILER) $(TEST_C_FLAGS) $(DEFS) -S -o $@ $<
+	@echo "[ASM] $@ generated"
 # 生成 test.c 的汇编文件：build/$(NUM)/test.s
 # 用法：make NUM=1 ENABLE_RVM_MATRIX=1 asm
 asm: build/$(NUM)/test.s
@@ -183,22 +275,28 @@ build/$(NUM)/test.s: test.c
 	@mkdir -p $(dir $@)
 	$(TEST_C_COMPILER) $(TEST_C_FLAGS) -S -fverbose-asm -o $@ $<
 	@echo "[ASM] $@ generated"
+# 带源码注释的详细汇编
+asm-verbose: build/$(NUM)/test_verbose.s
+build/$(NUM)/test_verbose.s: test.c
+	@mkdir -p $(dir $@)
+	$(TEST_C_COMPILER) $(TEST_C_FLAGS) $(DEFS) -fverbose-asm -S -o $@ $<
+
 .c.o:
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) $(RELAX_DISABLE) -c -o $@ $<
 
 # C++ 源文件规则
 .cc.o:
 	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) $(RELAX_DISABLE) -c -o $@ $<
 
 .cpp.o:
 	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) $(RELAX_DISABLE)-c -o $@ $<
 
 .cxx.o:
 	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) $(RELAX_DISABLE) -c -o $@ $<
 	
 $(target_elf): $(objects)
 	$(LINK) -o $(target_elf) $^ $(LDFLAGS)

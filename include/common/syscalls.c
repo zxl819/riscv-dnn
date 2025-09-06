@@ -15,21 +15,45 @@
 extern volatile uint64_t tohost;
 extern volatile uint64_t fromhost;
 
-static uintptr_t syscall(uintptr_t which, uint64_t arg0, uint64_t arg1, uint64_t arg2)
+register void *thread_pointer asm("tp");
+
+// tohost is 64 bits wide, irrespective of XLEN.  The structure expected in Spike is:
+// - tohost[63:56] == device (syscall: 0)
+// - tohost[55:48] == command (syscall: 0)
+// - tohost[47:0]  == payload (syscall: address of magic_mem)
+//
+// magic_mem for a syscall contains the following elements (XLEN bits each)
+// - syscall index (93 dec for syscall_exit, cf. Spike values in
+//   riscv-isa-sim/fesvr/syscall.cc:140 and ff.)
+// - syscall args in the declaration order of the given syscall
+
+static uintptr_t syscall(uintptr_t which, uintptr_t arg0, uintptr_t arg1, uintptr_t arg2)
 {
-  volatile uint64_t magic_mem[8] __attribute__((aligned(64)));
+  // Arguments in magic_mem have XLEN bits each.
+  volatile uintptr_t magic_mem[8] __attribute__((aligned(64)));
   magic_mem[0] = which;
   magic_mem[1] = arg0;
   magic_mem[2] = arg1;
   magic_mem[3] = arg2;
+#ifdef __riscv_atomic // __sync_synchronize requires A extension
   __sync_synchronize();
+#endif
 
-  tohost = (uintptr_t)magic_mem;
+  // A WRITE_MEM transaction writing non-zero value to TOHOST triggers
+  // the environment (Spike or RTL harness).
+  // - here tohost is guaranteed non-NULL because magic_mem is a valid RISC-V
+  //   pointer.
+  // - the environment acknowledges the env request by writing 0 into tohost.
+  // - the completion of the request is signalled by the environment through
+  //   a write of a non-zero value into fromhost.
+  tohost = (((uint64_t) ((unsigned long int) magic_mem)) << 16) >> 16;    // clear the DEV and CMD bytes, clip payload.
   while (fromhost == 0)
     ;
   fromhost = 0;
 
+#ifdef __riscv_atomic // __sync_synchronize requires A extension
   __sync_synchronize();
+#endif
   return magic_mem[0];
 }
 
@@ -53,21 +77,24 @@ void setStats(int enable)
 #undef READ_CTR
 }
 
-extern unsigned long begin_signature;
-extern unsigned long end_signature;
-
-inline void flush_signature_cachelines() {
-  unsigned long *addr = (unsigned long *)0x2010200;
-  unsigned long pos = begin_signature;
-  do {
-    *addr = pos;
-    pos += 64;
-  } while(pos < end_signature);
+uintptr_t getStats(int counterid)
+{
+  return counters[counterid];
 }
 
 void __attribute__((noreturn)) tohost_exit(uintptr_t code)
 {
-  tohost = (code << 1) | 1;
+  // Simply write PASS/FAIL result into 'tohost'.
+  // Left shift 'code' by 1 and set bit 0 to 1, but leave the 16 uppermost bits clear
+  // so that the syscall is properly recognized even if 'code' value is very large.
+  tohost = ((((uint64_t) code) << 17) >> 16) | 1;
+
+  // Do not care about the value returned by host.
+  // Leave 1 cycle of slack (one NOP instruction) to help debugging
+  // the termination mechanism if needed.
+  __asm__("nop\n\t");
+
+  // Go into an endless loop if the write into 'tohost' did not terminate the simulation.
   while (1);
 }
 
@@ -78,8 +105,6 @@ uintptr_t __attribute__((weak)) handle_trap(uintptr_t cause, uintptr_t epc, uint
 
 void exit(int code)
 {
-  //flush_signature_cachelines();
-  asm("ecall");
   tohost_exit(code);
 }
 
@@ -90,7 +115,9 @@ void abort()
 
 void printstr(const char* s)
 {
+#if !NOPRINT
   syscall(SYS_write, 1, (uintptr_t)s, strlen(s));
+#endif
 }
 
 void __attribute__((weak)) thread_entry(int cid, int nc)
@@ -109,8 +136,6 @@ int __attribute__((weak)) main(int argc, char** argv)
 
 static void init_tls()
 {
-  register void* thread_pointer;
-  asm volatile("mv %0, tp" : "=r"(thread_pointer));
   extern char _tdata_begin, _tdata_end, _tbss_end;
   size_t tdata_size = &_tdata_end - &_tdata_begin;
   memcpy(thread_pointer, &_tdata_begin, tdata_size);
@@ -121,30 +146,37 @@ static void init_tls()
 void _init(int cid, int nc)
 {
   init_tls();
-#ifndef CORENUMS
   thread_entry(cid, nc);
-#endif
 
   // only single-threaded programs should ever get here.
   int ret = main(0, 0);
 
-#if !(__clang__)
   char buf[NUM_COUNTERS * 32] __attribute__((aligned(64)));
   char* pbuf = buf;
   for (int i = 0; i < NUM_COUNTERS; i++)
     if (counters[i])
-      pbuf += sprintf(pbuf, "%s = %d\n", counter_names[i], counters[i]);
+      pbuf += sprintf(pbuf, "%s = %zu\n", counter_names[i], counters[i]);
   if (pbuf != buf)
     printstr(buf);
-#endif
 
   exit(ret);
+}
+
+int puts(const char *s)
+{
+  const char *p = s;
+
+  while (*p)
+    putchar(*p++);
+
+  putchar('\n');
+  return 0;
 }
 
 #undef putchar
 int putchar(int ch)
 {
-#ifndef __GEM5__
+#if !NOPRINT
   static __thread char buf[64] __attribute__((aligned(64)));
   static __thread int buflen = 0;
 
@@ -155,9 +187,6 @@ int putchar(int ch)
     syscall(SYS_write, 1, (uintptr_t)buf, buflen);
     buflen = 0;
   }
-#else
-  volatile char *uart = (char *)0x2c07f3100;
-  *uart = ch;
 #endif
 
   return 0;
@@ -392,7 +421,6 @@ int sprintf(char* str, const char* fmt, ...)
   va_list ap;
   char* str0 = str;
   va_start(ap, fmt);
-
 
   vprintfmt(sprintf_putch, (void**)&str, fmt, ap);
   *str = 0;

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <riscv_matrix.h>
+#include "../../../include/riscv_matrix.h"
 // // #include <stdint.h>
 
 // #include "../../../src/matmul_tile.h"

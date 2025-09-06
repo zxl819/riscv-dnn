@@ -12,3 +12,11 @@
 
         
 #endif // __INCBIN_H__
+
+#ifdef DISABLE_INCBIN
+#define INCBIN(name, file) \
+  __attribute__((aligned(16))) const unsigned char name[] = {0}; \
+  const unsigned int name##_len = 0;
+#else
+// 原有 INCBIN 宏定义
+#endif

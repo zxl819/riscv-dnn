@@ -1,52 +1,79 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "../../../src/matmul_rvm_int8.h"
+#include "../include/matrix/matrix_intrinsic.h"
+#include "tensor.h"
+#include <riscv_matrix.h>
+#include <stddef.h>
+#include <assert.h>
 
-// #include <stdint.h>
+#define M 64
+#define K 64
+#define N 64
+// #define A 0
+// #define B 4096
+// #define C 8192
 
-#include "../../../src/matmul.h"
-//#include "../../../src/perf.h"
-#include "../../../include/incbin.h"
+/* 其中.matA,B,C由link.ld中定义
+  . = 0x80040000; _matA_start = .; .matA : { *(.matA) } _matA_end = .;
+  . = 0x80041000; _matB_start = .; .matB : { *(.matB) } _matB_end = .;
+  . = 0x80042000; _matC_start = .; .matC : { *(.matC) } _matC_end = .;*/
 
-//#include "./cpi.h"
-
-#include "params.h"
-
-INCBIN(src1Data, "src1.bin", ".scdata.params");   // src1.bin数据嵌入到src1Data
-INCBIN(src2Data, "src2.bin", ".scdata.params");   // src2.bin数据嵌入到src2Data
+__attribute__((section(".matA"), aligned(64))) int8_t  A[M*K];
+__attribute__((section(".matB"), aligned(64))) int8_t  B[K*N];
+__attribute__((section(".matC"), aligned(64))) int32_t C[M*N];
 
 
 
-// 定义一个目标矩阵数组，并把它指定到.scdata.output存储区域
-uint8_t dstData[OUT_SIZE * sizeof(float16_t)] __attribute__((__section__(".scdata.output")));
-
-int main(int argc, char **argv)
+int main()
 {
-    printf("Begin\n");
 
-    const int m = M;
-    const int k = K;
-    const int n = N;
+// int8_t A_DATA;
+// int8_t B_DATA;
+// int8_t C_DATA;
+// &A=A;
+// &B=B;
+// &C=C;
+static inline int matmul_batch1( A, B,C,
+                        int M, int N, int K){
+  int m = M, n = N, k = K;
+  // assert(src1->shape[0] == m && src1->shape[1] == k);
+  // assert(src2->shape[0] == k && src2->shape[1] == n);
+  // assert(dst->shape[0]  == m && dst->shape[1]  == n);
 
-    if (DEBUG_PRINT) {
-        printf("In Shape:\n\t(m, k, n) = (%d, %d, %d)\n",
-                    m, k, n);
+  // int8_t  *A ;
+  // int8_t  *B ;
+  // int32_t *C ;
+
+  const int lda_bytes = k * (int)sizeof(int8_t);
+  const int ldb_bytes = n * (int)sizeof(int8_t);
+  const int ldc_bytes = n * (int)sizeof(int32_t);
+
+  const int dataSize = sizeof(int8_t);
+  int tile_m = 0, tile_n = 0, tile_k = 0;
+
+  for (int i = 0; i < m; i += tile_m) {
+    tile_m = msettilem(m - i);
+    for (int j = 0; j < n; j += tile_n) {
+      tile_n = msettilen(n - j);
+      mint32_t acc;
+      for (int kk = 0; kk < k; kk += tile_k) {
+        tile_k = msettilek(k - kk);
+        mint8_t tr0 = mla_m(A + i * k + kk, lda_bytes);
+        mint8_t tr1 = mlb_m(B + kk * n + j, ldb_bytes);
+        acc = mqma_mm(acc, tr0, tr1);
+      }
+      msc_m(acc, C + i * n + j, ldc_bytes);
     }
+  }
+  return 0;
+}
 
-    // 创建源矩阵、目标矩阵，初始化矩阵数据
-    tensor_new_2d(src1Mat, m, k, sizeof(float16_t), src1Data);  // src1data初始化src1Mat矩阵
-    tensor_new_2d(src2Mat, k, n, sizeof(float16_t), src2Data);
-    tensor_new_2d(dstMat, m, n, sizeof(float16_t), &dstData);
+static inline int matmul(A, B,C,
+                         int M, int N, int K){
+  return matmul_batch1(A, B,C,M,N,K);
+}
 
-    // PERF_BEGIN();  // perf计算开始
-    // stats(
-        for (int i = 0; i < NLOOPS; i++) {
-            matmul(&dstMat, &src1Mat, &src2Mat);
-        }
-    // , 1) ;
-
-    // PERF_END();   // perf计算结束
-    
-    printf("End\n");
 
     return 0;
 }
