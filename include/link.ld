@@ -46,10 +46,21 @@ SECTIONS
     *(.sdata .sdata.* .gnu.linkonce.s.*)
     
   }
-  . = 0x80040000; _matA_start = .; .matA : { *(.matA) } _matA_end = .;
-  . = 0x80041000; _matB_start = .; .matB : { *(.matB) } _matB_end = .;
-  . = 0x80042000; _matC_start = .; .matC : { *(.matC) } _matC_end = .;
+/* mat data address 
+. = 0x0; _matA_start = .; .matA : { *(.matA) } _matA_end = .;
+. = 0x1000; _matB_start = .; .matB : { *(.matB) } _matB_end = .;
+. = 0x2000; _matC_start = .; .matC : { *(.matC) } _matC_end = .;
+outrange
+*/
+. = 0x80040000; _matA_start = .; .matA : { *(.matA) } _matA_end = .;
+. = 0x80050000; _matB_start = .; .matB : { *(.matB) } _matB_end = .;
+. = 0x80060000; _matC_start = .; .matC : { *(.matC) } _matC_end = .;
 
+/*. = 0x80040000;
+. = ALIGN(64); _matA_start = .; .matA : { *(.matA) } _matA_end = .;
+. = ALIGN(64); _matB_start = .; .matB : { *(.matB) } _matB_end = .;
+. = ALIGN(64); _matC_start = .; .matC : { *(.matC) } _matC_end = .;
+*/
   /* bss segment */
 /*  .sbss : {
     *(.sbss .sbss.* .gnu.linkonce.sb.*)
