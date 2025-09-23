@@ -33,36 +33,36 @@ TC ?= llvm
 
 NCORES := 1
 
-SPIKE := spike
-#SPIKE := $(RISCV_HOME)/bin/spike 
+SPIKE := spike  # 可运行矩阵扩展的 spike
+#SPIKE := $(HOME)/opt/riscv-spike/bin/spike #vlen512 可配置vlen的 spike
 SPIKE_ARGS :=
 
 
 
 ifeq (x$(SIM), xspike)
 SIM_CMD ?= \
-	$(SPIKE) --isa=rv64gcv_zfh_zvfh_matrix \
+	$(SPIKE) -d --log-commits --isa=rv64gcv_zfh_zvfh_matrix_zvl512b \
 		+signature=build/$(NUM)/spike.sig +signature-granularity=32
 SIMV_POST := > build/$(NUM)/spike.log 2>&1
 defines += -D__SPIKE__
 endif
-# -d --log-commits 
+# -d --log-commits --isa=rv64gcv_zfh_zvfh_matrix_zvl512b
 
 PREFIX ?= riscv64-unknown-elf-
 OBJDUMP := $(PREFIX)objdump
 
 # CLANG_HOME 设定后 CC / CXX 指向自编 LLVM。
-#CLANG_HOME := $(HOME)/opt/riscv/riscv-matrix-project/llvm-project
-CLANG_HOME := $(HOME)/opt/riscv-llvm/bin/
-#CC := $(CLANG_HOME)/build-ninja/bin/clang
-#CXX := $(CLANG_HOME)/build-ninja/bin/clang++
-CC := $(CLANG_HOME)/clang
-CXX := $(CLANG_HOME)/clang++
+CLANG_HOME := $(HOME)/opt/riscv/riscv-matrix-project/llvm-project
+#CLANG_HOME := $(HOME)/opt/riscv-llvm/bin/
+CC := $(CLANG_HOME)/build-ninja/bin/clang
+CXX := $(CLANG_HOME)/build-ninja/bin/clang++
+#CC := $(CLANG_HOME)/clang
+#CXX := $(CLANG_HOME)/clang++
 # RISC-V 架构字符串（可覆盖）。
 # 说明：Clang 14 仍将 V 扩展视作实验特性，需要显式版本号（如 v0p10）。
 # 如使用较新编译器（已支持稳定 V 扩展），可覆盖为 rv64gcv_zfh_zvfh。
- RV_MARCH ?= rv64gcv_zfh_zvfh
-# RV_MARCH ?= rv64gcv0p10_zfh0p1
+#RV_MARCH ?= rv64gcv_zfh_zvfh
+RV_MARCH ?= rv64gcv0p10_zfh0p1
 # 是否启用 Matrix 扩展实现（RVM）。0=默认关闭（使用 RVV 实现）；1=开启（使用 RVM 实现）
 ENABLE_RVM_MATRIX ?= 0
 # 编译公共 C/C++ 选项

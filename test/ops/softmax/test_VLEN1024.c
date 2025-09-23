@@ -1,90 +1,90 @@
-#define VLEN 512
+#define VLEN 1024
 #include <riscv_vector.h>
 #define INFINITY (__builtin_inff())
-#include <stdio.h>
-#include <string.h>
+// #include <stdio.h>
+// #include <string.h>
 
-// 安全版本的打印函数
-static inline char dbg_hex_digit(unsigned x){ return (x<10)?('0'+x):('A'+(x-10)); }
+// // 安全版本的打印函数
+// static inline char dbg_hex_digit(unsigned x){ return (x<10)?('0'+x):('A'+(x-10)); }
 
-static void dbg_print_line(const char* s) {
-    // 使用安全的 printf 格式
-    printf("%s", s);
-}
+// static void dbg_print_line(const char* s) {
+//     // 使用安全的 printf 格式
+//     printf("%s", s);
+// }
 
-static void dbg_print_u32(const char* label, uint32_t v) {
-    char buf[64];
-    int p = 0;
-    // 复制 label
-    for (; label[p] && p < (int)sizeof(buf)-1; ++p) buf[p] = label[p];
-    if (p < (int)sizeof(buf)-1) buf[p++] = ':'; 
-    if (p < (int)sizeof(buf)-1) buf[p++] = ' ';
-    // 十进制
-    char tmp[16]; int t = 0;
-    if (v == 0) tmp[t++] = '0';
-    else { while (v && t < (int)sizeof(tmp)) { tmp[t++] = '0' + (v % 10); v /= 10; } }
-    while (t && p < (int)sizeof(buf)-1) buf[p++] = tmp[--t];
-    if (p < (int)sizeof(buf)-1) buf[p++] = '\n';
-    buf[p] = 0;
-    printf("%s", buf);
-}
+// static void dbg_print_u32(const char* label, uint32_t v) {
+//     char buf[64];
+//     int p = 0;
+//     // 复制 label
+//     for (; label[p] && p < (int)sizeof(buf)-1; ++p) buf[p] = label[p];
+//     if (p < (int)sizeof(buf)-1) buf[p++] = ':'; 
+//     if (p < (int)sizeof(buf)-1) buf[p++] = ' ';
+//     // 十进制
+//     char tmp[16]; int t = 0;
+//     if (v == 0) tmp[t++] = '0';
+//     else { while (v && t < (int)sizeof(tmp)) { tmp[t++] = '0' + (v % 10); v /= 10; } }
+//     while (t && p < (int)sizeof(buf)-1) buf[p++] = tmp[--t];
+//     if (p < (int)sizeof(buf)-1) buf[p++] = '\n';
+//     buf[p] = 0;
+//     printf("%s", buf);
+// }
 
-static void dbg_print_hex32(const char* label, uint32_t v) {
-    char buf[64];
-    int p = 0;
-    for (; label[p] && p < (int)sizeof(buf)-1; ++p) buf[p] = label[p];
-    if (p < (int)sizeof(buf)-1) buf[p++] = ':'; 
-    if (p < (int)sizeof(buf)-1) buf[p++] = ' ';
-    if (p < (int)sizeof(buf)-1) buf[p++] = '0';
-    if (p < (int)sizeof(buf)-1) buf[p++] = 'x';
-    for (int i = 7; i >= 0 && p < (int)sizeof(buf)-1; --i) {
-        buf[p++] = dbg_hex_digit((v >> (i*4)) & 0xF);
-    }
-    if (p < (int)sizeof(buf)-1) buf[p++] = '\n';
-    buf[p] = 0;
-    printf("%s", buf);
-}
+// static void dbg_print_hex32(const char* label, uint32_t v) {
+//     char buf[64];
+//     int p = 0;
+//     for (; label[p] && p < (int)sizeof(buf)-1; ++p) buf[p] = label[p];
+//     if (p < (int)sizeof(buf)-1) buf[p++] = ':'; 
+//     if (p < (int)sizeof(buf)-1) buf[p++] = ' ';
+//     if (p < (int)sizeof(buf)-1) buf[p++] = '0';
+//     if (p < (int)sizeof(buf)-1) buf[p++] = 'x';
+//     for (int i = 7; i >= 0 && p < (int)sizeof(buf)-1; --i) {
+//         buf[p++] = dbg_hex_digit((v >> (i*4)) & 0xF);
+//     }
+//     if (p < (int)sizeof(buf)-1) buf[p++] = '\n';
+//     buf[p] = 0;
+//     printf("%s", buf);
+// }
 
-static void dbg_print_idx_hex32(const char* name, uint32_t idx, const char* suffix, uint32_t v) {
-    char buf[96];
-    int p = 0;
-    // name
-    for (; name[p] && p < (int)sizeof(buf)-1; ++p) buf[p] = name[p];
-    if (p < (int)sizeof(buf)-1) buf[p++] = '[';
-    // idx
-    char tmp[16]; int t = 0; uint32_t x = idx;
-    if (x == 0) tmp[t++] = '0';
-    else { while (x && t < (int)sizeof(tmp)) { tmp[t++] = '0' + (x % 10); x /= 10; } }
-    while (t && p < (int)sizeof(buf)-1) buf[p++] = tmp[--t];
-    if (p < (int)sizeof(buf)-1) buf[p++] = ']';
-    if (suffix) {
-        if (p < (int)sizeof(buf)-1) buf[p++] = ' ';
-        for (int i = 0; suffix[i] && p < (int)sizeof(buf)-1; ++i) buf[p++] = suffix[i];
-    }
-    if (p < (int)sizeof(buf)-1) buf[p++] = ':';
-    if (p < (int)sizeof(buf)-1) buf[p++] = ' ';
-    if (p < (int)sizeof(buf)-1) buf[p++] = '0';
-    if (p < (int)sizeof(buf)-1) buf[p++] = 'x';
-    for (int i = 7; i >= 0 && p < (int)sizeof(buf)-1; --i) {
-        buf[p++] = dbg_hex_digit((v >> (i*4)) & 0xF);
-    }
-    if (p < (int)sizeof(buf)-1) buf[p++] = '\n';
-    buf[p] = 0;
-    printf("%s", buf);
-}
+// static void dbg_print_idx_hex32(const char* name, uint32_t idx, const char* suffix, uint32_t v) {
+//     char buf[96];
+//     int p = 0;
+//     // name
+//     for (; name[p] && p < (int)sizeof(buf)-1; ++p) buf[p] = name[p];
+//     if (p < (int)sizeof(buf)-1) buf[p++] = '[';
+//     // idx
+//     char tmp[16]; int t = 0; uint32_t x = idx;
+//     if (x == 0) tmp[t++] = '0';
+//     else { while (x && t < (int)sizeof(tmp)) { tmp[t++] = '0' + (x % 10); x /= 10; } }
+//     while (t && p < (int)sizeof(buf)-1) buf[p++] = tmp[--t];
+//     if (p < (int)sizeof(buf)-1) buf[p++] = ']';
+//     if (suffix) {
+//         if (p < (int)sizeof(buf)-1) buf[p++] = ' ';
+//         for (int i = 0; suffix[i] && p < (int)sizeof(buf)-1; ++i) buf[p++] = suffix[i];
+//     }
+//     if (p < (int)sizeof(buf)-1) buf[p++] = ':';
+//     if (p < (int)sizeof(buf)-1) buf[p++] = ' ';
+//     if (p < (int)sizeof(buf)-1) buf[p++] = '0';
+//     if (p < (int)sizeof(buf)-1) buf[p++] = 'x';
+//     for (int i = 7; i >= 0 && p < (int)sizeof(buf)-1; --i) {
+//         buf[p++] = dbg_hex_digit((v >> (i*4)) & 0xF);
+//     }
+//     if (p < (int)sizeof(buf)-1) buf[p++] = '\n';
+//     buf[p] = 0;
+//     printf("%s", buf);
+// }
 
-static inline uint32_t load_f32_bits(const float* p) {
-    uint32_t u; memcpy(&u, p, 4); return u;
-}
+// static inline uint32_t load_f32_bits(const float* p) {
+//     uint32_t u; memcpy(&u, p, 4); return u;
+// }
 
 void softmax_stable_rvv_fp32(float* dst, float* src, size_t n);
 float quick_dirty_vector_expf(float* dst, float* src, float max_x, size_t n);
 uint32_t quick_dirty_vector_expf_no_scalar(float* dst, float* src, uint32_t max_x_bits, size_t n);
 
-float src[VLEN/32]={-0.50183952f,1.80285728f,0.92797577f,0.39463395f,-1.37592542f,-1.37602186f,-1.76766551f,1.46470463f,0.40446004f,0.83229029f,-1.91766202f,1.87963939f,1.32977057f,-1.15064359f,-1.27270019f,-1.26638198f};//,-0.78303105f,0.09902573f,-0.27221993f,-0.83508343f,0.44741157f,-1.44202459f,-0.83142143f,-0.53455263f,-0.17572007f,1.14070380f,-1.20130491f,0.05693775f,0.36965826f,-1.81419837f,0.43017942f,-1.31790352f};
+float src[VLEN/32]={-0.50183952f,1.80285728f,0.92797577f,0.39463395f,-1.37592542f,-1.37602186f,-1.76766551f,1.46470463f,0.40446004f,0.83229029f,-1.91766202f,1.87963939f,1.32977057f,-1.15064359f,-1.27270019f,-1.26638198f,-0.78303105f,0.09902573f,-0.27221993f,-0.83508343f,0.44741157f,-1.44202459f,-0.83142143f,-0.53455263f,-0.17572007f,1.14070380f,-1.20130491f,0.05693775f,0.36965826f,-1.81419837f,0.43017942f,-1.31790352f};
 float dst[VLEN/32]={0};
 
-float golden[VLEN/32]={0.01962993f,0.19671424f,0.08201241f,0.04811186f,0.00819046f,0.00818966f,0.00553576f,0.14027424f,0.04858694f,0.07452876f,0.00476469f,0.21241336f,0.12256793f,0.01025998f,0.00908109f,0.00913865f};//,0.01011935f,0.02444698f,0.01686534f,0.00960609f,0.03463596f,0.00523547f,0.00964133f,0.01297375f,0.01857396f,0.06928197f,0.00666038f,0.02343940f,0.03204493f,0.00360847f,0.03404422f,0.00592735f};
+float golden[VLEN/32]={0.01340518f,0.13433519f,0.05600587f,0.03285535f,0.00559322f,0.00559268f,0.00378034f,0.09579259f,0.03317978f,0.05089533f,0.00325378f,0.14505604f,0.08370104f,0.00700649f,0.00620143f,0.00624074f,0.01011935f,0.02444698f,0.01686534f,0.00960609f,0.03463596f,0.00523547f,0.00964133f,0.01297375f,0.01857396f,0.06928197f,0.00666038f,0.02343940f,0.03204493f,0.00360847f,0.03404422f,0.00592735f};
 float diff_mem[VLEN/32]={0};
 
 int main(){
@@ -118,9 +118,9 @@ void softmax_stable_rvv_fp32(float* dst, float* src, size_t n)
     vuint32m1_t vneg_inf_int = __riscv_vmv_v_x_u32m1(constants[0], vlmax);
     vfloat32m1_t vmax = __riscv_vreinterpret_v_u32m1_f32m1(vneg_inf_int);
     
-    // 打印输入数据
-    // dbg_print_line("Input data:\n");
-    // for (size_t i = 0; i < n; i++) {
+    // // 打印输入数据
+    // dbg_print_line("Input data (first 8, bits):\n");
+    // for (size_t i = 0; i < n && i < 8; i++) {
     //     dbg_print_idx_hex32("src", (uint32_t)i, "bits", load_f32_bits(&src[i]));
     // }
 
@@ -193,9 +193,9 @@ void softmax_stable_rvv_fp32(float* dst, float* src, size_t n)
     }
     dst = dst_orig; // 重置目标指针
     
-    // //打印最终结果
-    // dbg_print_line("Final results:\n");
-    // for (size_t i = 0; i < n; i++) {
+    // 打印最终结果
+    // dbg_print_line("Final results (first 8, bits):\n");
+    // for (size_t i = 0; i < n && i < 8; i++) {
     //     dbg_print_idx_hex32("dst", (uint32_t)i, "bits", load_f32_bits(&dst[i]));
     //     dbg_print_idx_hex32("golden", (uint32_t)i, "bits", load_f32_bits(&golden[i]));
     // }

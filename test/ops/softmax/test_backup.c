@@ -1,4 +1,4 @@
-#define VLEN 512
+#define VLEN 1024
 #include <riscv_vector.h>
 #define INFINITY (__builtin_inff())
 #include <stdio.h>
@@ -81,10 +81,10 @@ void softmax_stable_rvv_fp32(float* dst, float* src, size_t n);
 float quick_dirty_vector_expf(float* dst, float* src, float max_x, size_t n);
 uint32_t quick_dirty_vector_expf_no_scalar(float* dst, float* src, uint32_t max_x_bits, size_t n);
 
-float src[VLEN/32]={-0.50183952f,1.80285728f,0.92797577f,0.39463395f,-1.37592542f,-1.37602186f,-1.76766551f,1.46470463f,0.40446004f,0.83229029f,-1.91766202f,1.87963939f,1.32977057f,-1.15064359f,-1.27270019f,-1.26638198f};//,-0.78303105f,0.09902573f,-0.27221993f,-0.83508343f,0.44741157f,-1.44202459f,-0.83142143f,-0.53455263f,-0.17572007f,1.14070380f,-1.20130491f,0.05693775f,0.36965826f,-1.81419837f,0.43017942f,-1.31790352f};
+float src[VLEN/32]={-0.50183952f,1.80285728f,0.92797577f,0.39463395f,-1.37592542f,-1.37602186f,-1.76766551f,1.46470463f,0.40446004f,0.83229029f,-1.91766202f,1.87963939f,1.32977057f,-1.15064359f,-1.27270019f,-1.26638198f,-0.78303105f,0.09902573f,-0.27221993f,-0.83508343f,0.44741157f,-1.44202459f,-0.83142143f,-0.53455263f,-0.17572007f,1.14070380f,-1.20130491f,0.05693775f,0.36965826f,-1.81419837f,0.43017942f,-1.31790352f};
 float dst[VLEN/32]={0};
 
-float golden[VLEN/32]={0.01962993f,0.19671424f,0.08201241f,0.04811186f,0.00819046f,0.00818966f,0.00553576f,0.14027424f,0.04858694f,0.07452876f,0.00476469f,0.21241336f,0.12256793f,0.01025998f,0.00908109f,0.00913865f};//,0.01011935f,0.02444698f,0.01686534f,0.00960609f,0.03463596f,0.00523547f,0.00964133f,0.01297375f,0.01857396f,0.06928197f,0.00666038f,0.02343940f,0.03204493f,0.00360847f,0.03404422f,0.00592735f};
+float golden[VLEN/32]={0.01340518f,0.13433519f,0.05600587f,0.03285535f,0.00559322f,0.00559268f,0.00378034f,0.09579259f,0.03317978f,0.05089533f,0.00325378f,0.14505604f,0.08370104f,0.00700649f,0.00620143f,0.00624074f,0.01011935f,0.02444698f,0.01686534f,0.00960609f,0.03463596f,0.00523547f,0.00964133f,0.01297375f,0.01857396f,0.06928197f,0.00666038f,0.02343940f,0.03204493f,0.00360847f,0.03404422f,0.00592735f};
 float diff_mem[VLEN/32]={0};
 
 int main(){
@@ -113,16 +113,16 @@ void softmax_stable_rvv_fp32(float* dst, float* src, size_t n)
         0x322BCC77   // 1e-8f     [11]
     };
     
-    // dbg_print_u32("vlmax", (uint32_t)vlmax);
+    dbg_print_u32("vlmax", (uint32_t)vlmax);
     
     vuint32m1_t vneg_inf_int = __riscv_vmv_v_x_u32m1(constants[0], vlmax);
     vfloat32m1_t vmax = __riscv_vreinterpret_v_u32m1_f32m1(vneg_inf_int);
     
     // 打印输入数据
-    // dbg_print_line("Input data:\n");
-    // for (size_t i = 0; i < n; i++) {
-    //     dbg_print_idx_hex32("src", (uint32_t)i, "bits", load_f32_bits(&src[i]));
-    // }
+    dbg_print_line("Input data (first 8, bits):\n");
+    for (size_t i = 0; i < n && i < 8; i++) {
+        dbg_print_idx_hex32("src", (uint32_t)i, "bits", load_f32_bits(&src[i]));
+    }
 
     float* src_orig = src; // 保存原始指针
     size_t avl = n;
@@ -146,11 +146,11 @@ void softmax_stable_rvv_fp32(float* dst, float* src, size_t n)
     
     union { uint32_t u; float f; } max_x_union = {.u = max_x_bits[0]};
     uint32_t max_x_as_int = max_x_union.u;
-    // dbg_print_hex32("max_x bits", max_x_as_int);
+    dbg_print_hex32("max_x bits", max_x_as_int);
 
     // Computing element-wise exponentials and their sum.
     uint32_t sum_bits = quick_dirty_vector_expf_no_scalar(dst, src, max_x_as_int, n);
-    // dbg_print_hex32("Returning sum bits", sum_bits);
+    dbg_print_hex32("Returning sum bits", sum_bits);
 
     // 用 vfrec7 + 2 次 NR 直接做除法近似，避免标量寄存器
     avl = n;
@@ -193,12 +193,12 @@ void softmax_stable_rvv_fp32(float* dst, float* src, size_t n)
     }
     dst = dst_orig; // 重置目标指针
     
-    // //打印最终结果
-    // dbg_print_line("Final results:\n");
-    // for (size_t i = 0; i < n; i++) {
-    //     dbg_print_idx_hex32("dst", (uint32_t)i, "bits", load_f32_bits(&dst[i]));
-    //     dbg_print_idx_hex32("golden", (uint32_t)i, "bits", load_f32_bits(&golden[i]));
-    // }
+    // 打印最终结果
+    dbg_print_line("Final results (first 8, bits):\n");
+    for (size_t i = 0; i < n && i < 8; i++) {
+        dbg_print_idx_hex32("dst", (uint32_t)i, "bits", load_f32_bits(&dst[i]));
+        dbg_print_idx_hex32("golden", (uint32_t)i, "bits", load_f32_bits(&golden[i]));
+    }
 }
 
 /** RVV-based vectorized implementation avoiding scalar FP registers */
@@ -221,7 +221,7 @@ uint32_t quick_dirty_vector_expf_no_scalar(float* dst, float* src, uint32_t max_
         0x38800C00   // ln2_lo (低位部分)
     };
     
-    // dbg_print_hex32("exp max_x bits", max_x_bits);
+    dbg_print_hex32("exp max_x bits", max_x_bits);
 
     const size_t vlmax = __riscv_vsetvlmax_e32m1();
     
@@ -329,7 +329,7 @@ uint32_t quick_dirty_vector_expf_no_scalar(float* dst, float* src, uint32_t max_
     vuint32m1_t vredsum_int = __riscv_vreinterpret_v_f32m1_u32m1(vredsum);
     __riscv_vse32_v_u32m1(result_bits, vredsum_int, 1);
     
-    // dbg_print_hex32("Returning sum bits", result_bits[0]);
+    dbg_print_hex32("Returning sum bits", result_bits[0]);
     
     return result_bits[0];
 }

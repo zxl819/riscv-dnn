@@ -40,10 +40,10 @@ __attribute__((aligned(64))) static const int8_t B_i8[K*N] = {{
 
 /* C 作为输出缓冲，初始为0 */
 __attribute__((aligned(64))) static int32_t C_i32[M*N] = {{
-{", ".join(["0"] * (m*n))}
+{", ".join(["1"] * (m*n))}
 }};
 
-/* D 为 golden 结果（int32 累加） */
+/* D 为 B转置后的运算结果 golden 结果（int32 累加） */
 __attribute__((aligned(64))) static const int32_t D_i32[M*N] = {{
 {fmt_i32(D_i32)}
 }};
@@ -60,6 +60,7 @@ def gen_inputs_i8(m, k, n, seed=1, low=-128, high=127):
 
 def matmul_i8_i32(A_i8, B_i8):
     # int8 x int8 -> int32 累加
+    # return (A_i8.astype(np.int32) @ B_i8.astype(np.int32).T).astype(np.int32)
     return (A_i8.astype(np.int32) @ B_i8.astype(np.int32)).astype(np.int32)
 
 def matmul_and_dump(num, m, k, n, seed=1):

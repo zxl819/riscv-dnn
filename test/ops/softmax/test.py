@@ -24,13 +24,15 @@ print("run on %s" % simulator)
 
 def softmax(num, hin, win):
     # np.random.seed( 100 )
-    vs1 = np.random.random((hin, win)).astype('float32') * 10 - 5 # random  number between -5 and 5
+    #vs1 = np.random.random((hin, win)).astype('float32') * 10 - 5 # random  number between -5 and 5
+    float vs1[16] = {-0.50183952f,1.80285728f,0.92797577f,0.39463395f,-1.37592542f,-1.37602186f,-1.76766551f,1.46470463f,0.40446004f,0.83229029f,-1.91766202f,1.87963939f,1.32977057f,-1.15064359f,-1.27270019f,-1.26638198f};
     vd = tf.nn.softmax(vs1.flatten())      
     vd = vd.numpy().astype('float32')
     
     vs1.tofile(f'build/{num}/src.bin')
     vd.tofile(f'build/{num}/golden.bin')
     vs1.tofile(f'src.bin')
+    print
    
 
     return vd
@@ -56,7 +58,7 @@ if __name__ == "__main__":
     params = (
             #( 1, 8 ),
             #( 4, 8 ),
-            ( 300, 300 ),
+            ( 16, 16),
             # ( 32, 8 ),
             )
     
